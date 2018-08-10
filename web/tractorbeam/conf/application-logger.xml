@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+Logback configuration resources:
+- Configuration - http://logback.qos.ch/manual/configuration.html
+- Appenders - http://logback.qos.ch/manual/configuration.html
+- Encoders - http://logback.qos.ch/manual/encoders.html
+-->
+<!-- Scanning is disabled because this file is embedded in the JAR which causes scanning to fail -->
+<configuration scan="false">
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [STARSHIP-${STARSHIP_ENV:-local}-${STARSHIP_SERVICENAME:-starship}] %-5level %logger{36}: %msg [%mdc]%n%xEx</pattern>
+        </encoder>
+        <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel"/>
+    </appender>
+
+    <appender name="JSON_OUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- For the Starlog in particular we are outputting JSON that we want splunk to be able to index/query.
+             We don't want to prepend anything, just the json. -->
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root level will include third-party code, so we only want to see warnings or worse -->
+    <root level="warn">
+        <appender-ref ref="console"/>
+    </root>
+
+    <!-- We want more verbose logging. (Note that Ops may set this to
+    info or even warn depending on their needs. -->
+    <logger name="Request" level="${STARSHIP_LOG_LEVEL:-debug}"/>
+    <logger name="com.rallyhealth" level="${STARSHIP_LOG_LEVEL:-debug}"/>
+    <logger name="mongev" level="${STARSHIP_LOG_LEVEL:-debug}"/>
+
+    <logger name="com.rallyhealth.starship.actor.StarLogActor" level="info" additivity="false">
+        <appender-ref ref="JSON_OUT"/>
+    </logger>
+
+    <!--
+    External logback configuration file, can override the logging setup here, entirely optional.
+    http://logback.qos.ch/manual/configuration.html#fileInclusion
+    -->
+    <include optional="true" file="/etc/rallyhealth/starship.xml" />
+
+</configuration>
